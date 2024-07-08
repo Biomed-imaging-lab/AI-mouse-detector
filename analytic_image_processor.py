@@ -119,12 +119,13 @@ class AnalyticImageProcessor:
         self.search_middle_zone()
         self.search_outer_zone()
 
-    def draw_zones(self):
-        self.image = cv2.circle(self.image, (self.x_center, self.y_center), 2, (0, 0, 255), -1)
-        self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.central_zone[1], (0, 0, 255), 2)
-        self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.internal_zone[1], (0, 255, 0), 2)
-        self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.middle_zone[1], (255, 0, 0), 2)
-        self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.outer_zone[1], (255, 0, 255), 2)
+    def draw_zones(self, image: np.ndarray) -> np.ndarray:
+        image = cv2.circle(image, (self.x_center, self.y_center), 2, (0, 0, 255), -1)
+        image = cv2.circle(image, (self.x_center, self.y_center), self.central_zone[1], (0, 0, 255), 2)
+        image = cv2.circle(image, (self.x_center, self.y_center), self.internal_zone[1], (0, 255, 0), 2)
+        image = cv2.circle(image, (self.x_center, self.y_center), self.middle_zone[1], (255, 0, 0), 2)
+        image = cv2.circle(image, (self.x_center, self.y_center), self.outer_zone[1], (255, 0, 255), 2)
+        return image
 
     def show(self):
         self.search_zones()
