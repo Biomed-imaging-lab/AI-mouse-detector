@@ -113,7 +113,6 @@ class AnalyticImageProcessor:
     def search_outer_zone(self):
         self.outer_zone = (self.middle_zone[1], self.radius_arena)
 
-
     def search_zones(self):
         self.search_central_zone()
         self.search_internal_zone()
@@ -126,6 +125,7 @@ class AnalyticImageProcessor:
         self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.internal_zone[1], (0, 255, 0), 2)
         self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.middle_zone[1], (255, 0, 0), 2)
         self.image = cv2.circle(self.image, (self.x_center, self.y_center), self.outer_zone[1], (255, 0, 255), 2)
+
     def show(self):
         self.search_zones()
         cv2.imshow('image', self.image)
