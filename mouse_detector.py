@@ -1,8 +1,13 @@
 import cv2
 import numpy as np
+import os
+import csv
 
+from typing import List
 from ultralytics import YOLO
 from analytic_image_processor import AnalyticImageProcessor
+from calculator import Calculator
+
 
 class MouseDetector:
     def __init__(self, path_to_video: str, path_to_weight_yolo: str, do_output_video: bool = False):
@@ -10,8 +15,15 @@ class MouseDetector:
         if not self.input_video.isOpened():
             self.input_video.release()
             raise ValueError(f"[ERROR]: Couldn't open the video {path_to_video}")
+
+        self.output_name_csv = self.get_name_output_csv(path_to_video)
         self.model = YOLO(path_to_weight_yolo)
         self.do_output_video = do_output_video
+
+        with open(f'{self.output_name_csv}.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Time, m:s', '(X, Y), (px, px)', 'Central zone',
+                             'Internal zone', 'Middle zone', 'Outer zone', 'Angle btw head&body'])
 
     def search_center_and_zones(self) -> dict:
         _, frame = self.input_video.read()
@@ -26,6 +38,8 @@ class MouseDetector:
             'middle_zone': frame_analyzer.middle_zone,
             'outer_zone': frame_analyzer.outer_zone
         }
+        # frame_analyzer.draw_zones(frame_analyzer.image)
+        # frame_analyzer.show()
         return info_arena
 
     def search_mouse(self, image: np.ndarray) -> dict:
@@ -56,13 +70,21 @@ class MouseDetector:
 
         info_arena = self.search_center_and_zones()
 
+        frame_number = 0
+        fps = self.input_video.get(cv2.CAP_PROP_FPS)
+
         while True:
             ret, frame = self.input_video.read()
             if not ret:
                 break
             info_mouse = self.search_mouse(frame)
 
-            # модуль экспорта данных в эксель
+            if len(info_mouse) != 0:
+                time_frame = self.get_time_frame(frame_number, fps)
+                row_data = self.calculate(info_mouse, info_arena, time_frame)
+                self.export_to_csv(row_data)
+
+            frame_number += 1
 
             if self.do_output_video:
                 frame_with_all = self.draw(frame, info_mouse, info_arena)
@@ -72,6 +94,25 @@ class MouseDetector:
         if self.do_output_video:
             output_video.release()
         cv2.destroyAllWindows()
+
+    def get_time_frame(self, frame_number: int, fps: float):
+        current_time_seconds = frame_number / fps
+        minutes, seconds = divmod(current_time_seconds, 60)
+        return minutes, seconds
+
+    def get_name_output_csv(self, path_to_video: str):
+        output_filename = os.path.basename(path_to_video)
+        name = output_filename.split('.')[0]
+        return name
+
+    def calculate(self, info_mouse: dict, info_arena: dict, time_frame: tuple[float, float]) -> List:
+        calculator = Calculator(info_mouse, info_arena, time_frame)
+        return calculator.calculate()
+
+    def export_to_csv(self, row_data: list):
+        with open(f'{self.output_name_csv}.csv', 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(row_data)
 
     def draw(self, frame: np.ndarray, info_mouse: dict, info_arena: dict) -> np.ndarray:
         frame = cv2.circle(frame, (info_arena['x_center'], info_arena['y_center']), 2, (0, 0, 255), -1)
