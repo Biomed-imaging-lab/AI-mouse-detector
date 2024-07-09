@@ -1,8 +1,10 @@
+import math
+
 import numpy as np
 
 
 class Calculator:
-    def __init__(self, info_mouse: dict, info_arena: dict, time_frame: tuple[int, int]):
+    def __init__(self, info_mouse: dict, info_arena: dict, time_frame: tuple[float, float]):
         self.info_mouse = info_mouse
         self.info_arena = info_arena
         self.time_frame = time_frame
@@ -13,7 +15,8 @@ class Calculator:
         row_data.append(xy)
 
         zoning = self.calculate_zone_mouse()
-        row_data.append(zoning)
+        for zone in zoning:
+            row_data.append(zone)
 
         angle = self.calculate_angle_head_body()
         row_data.append(angle)
@@ -49,11 +52,11 @@ class Calculator:
         }
         for keypoint in self.info_mouse.values():
             new_x, new_y = self.change_coordinate_system(keypoint[0], keypoint[1])
-            distance = np.sqrt((new_x - self.info_arena['x_center'])**2 +
-                               (new_y - self.info_arena['y_center'])**2)
+            distance = np.sqrt(new_x**2 +
+                               new_y**2)
             for (r_min, r_max), value in zoning_dict.items():
                 if r_min < distance < r_max:
-                    value += 1
+                    zoning_dict[(r_min, r_max)] += 1
         values = list(zoning_dict.values())
         max_index = values.index(max(values))
         result = [False] * len(values)
@@ -65,14 +68,14 @@ class Calculator:
         vector_body = (self.info_mouse['point_near'][0] - self.info_mouse['point_tail'][0],
                        self.info_mouse['point_near'][1] - self.info_mouse['point_tail'][1])
 
-        vector_head = (self.info_mouse['point_near'][0] - self.info_mouse['point_tail'][0],
-                       self.info_mouse['point_nose'][1] - self.info_mouse['point_nose'][1])
+        vector_head = (self.info_mouse['point_near'][0] - self.info_mouse['point_nose'][0],
+                       self.info_mouse['point_near'][1] - self.info_mouse['point_nose'][1])
 
         length_vector_body = np.linalg.norm(vector_body)
         length_vector_head = np.linalg.norm(vector_head)
 
         cos_angle = np.dot(vector_body, vector_head) / (length_vector_head * length_vector_body)
-        return np.arccos(cos_angle)
+        return np.arccos(cos_angle) * (180 / math.pi)
 
 
 
