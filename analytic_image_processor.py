@@ -8,10 +8,10 @@ COEFF_FOR_WH_ROI = 0.25
 MAX_CONTOUR_LENGTH = 100
 DP_HOUGH = 1
 MIN_DIST_HOUGH = 50
-PARAM1_HOUGH = 40   #50
-PARAM2_HOUGH = 70     #120
-MIN_RADIUS_HOUGH = 250
-MAX_RADIUS_HOUGH = 500
+PARAM1_HOUGH = 30   #50 or 40
+PARAM2_HOUGH = 40     #120 or 70
+MIN_RADIUS_HOUGH = 350  #350
+MAX_RADIUS_HOUGH = 500  #500
 
 
 class AnalyticImageProcessor:
@@ -51,7 +51,7 @@ class AnalyticImageProcessor:
 
     def search_contour_of_arena(self):
         detected_circle = cv2.HoughCircles(
-            self.blurred_image, cv2.HOUGH_GRADIENT, DP_HOUGH, MIN_DIST_HOUGH, param1=PARAM1_HOUGH,
+            self.gray_image, cv2.HOUGH_GRADIENT, DP_HOUGH, MIN_DIST_HOUGH, param1=PARAM1_HOUGH,
             param2=PARAM2_HOUGH, minRadius=MIN_RADIUS_HOUGH, maxRadius=MAX_RADIUS_HOUGH)
 
         x_center, y_center = int(detected_circle[0, 0][0]), int(detected_circle[0, 0][1])
