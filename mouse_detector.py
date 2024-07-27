@@ -11,6 +11,7 @@ from calculator import Calculator
 
 class MouseDetector:
     def __init__(self, path_to_video: str, path_to_weight_yolo: str, do_output_video: bool = False):
+        self.path_to_video = path_to_video
         self.input_video = cv2.VideoCapture(path_to_video)
         if not self.input_video.isOpened():
             self.input_video.release()
@@ -60,7 +61,7 @@ class MouseDetector:
 
     def detect(self):
         if self.do_output_video:
-            output_video = cv2.VideoWriter('output_video.mp4',
+            output_video = cv2.VideoWriter(f'processed_{self.path_to_video}.mp4',
                                            cv2.VideoWriter_fourcc(*'mp4v'),
                                            self.input_video.get(cv2.CAP_PROP_FPS),
                                            (int(self.input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
