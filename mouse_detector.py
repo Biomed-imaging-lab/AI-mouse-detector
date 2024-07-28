@@ -7,12 +7,14 @@ from typing import List
 from ultralytics import YOLO
 from analytic_image_processor import AnalyticImageProcessor
 from calculator import Calculator
+from calculator_speed import CalculatorSpeed
 
 
 class MouseDetector:
     def __init__(self, path_to_video: str, path_to_weight_yolo: str, do_output_video: bool = False):
         self.path_to_video = path_to_video
         self.input_video = cv2.VideoCapture(path_to_video)
+
         if not self.input_video.isOpened():
             self.input_video.release()
             raise ValueError(f"[ERROR]: Couldn't open the video {path_to_video}")
@@ -20,11 +22,12 @@ class MouseDetector:
         self.output_name_csv = self.get_name_output_csv(path_to_video)
         self.model = YOLO(path_to_weight_yolo)
         self.do_output_video = do_output_video
+        self.calculator_speed = CalculatorSpeed()
 
         with open(f'{self.output_name_csv}.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Time, m:s', '(X, Y), (px, px)', 'Central zone',
-                             'Internal zone', 'Middle zone', 'Outer zone', 'Angle btw head&body'])
+                             'Internal zone', 'Middle zone', 'Outer zone', 'Angle btw head&body, degrees', 'Speed, m/s'])
 
     def search_center_and_zones(self) -> dict:
         _, frame = self.input_video.read()
@@ -58,10 +61,9 @@ class MouseDetector:
         else:
             return {}
 
-
     def detect(self):
         if self.do_output_video:
-            output_video = cv2.VideoWriter(f'processed_{self.path_to_video}.mp4',
+            output_video = cv2.VideoWriter(f'processed_{self.path_to_video}',
                                            cv2.VideoWriter_fourcc(*'mp4v'),
                                            self.input_video.get(cv2.CAP_PROP_FPS),
                                            (int(self.input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
@@ -81,6 +83,11 @@ class MouseDetector:
             if len(info_mouse) != 0:
                 time_frame = self.get_time_frame(frame_number, fps)
                 row_data = self.calculate(info_mouse, info_arena, time_frame)
+
+                current_time_seconds = frame_number / fps
+                speed = self.calculator_speed.update(info_mouse, current_time_seconds)
+
+                row_data.append(speed)
                 self.export_to_csv(row_data)
 
             frame_number += 1
