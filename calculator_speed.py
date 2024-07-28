@@ -29,7 +29,7 @@ class CalculatorSpeed:
         time_diff = time_current_frame - self.time_prev_frame
         speed_px_per_seconds = distance / time_diff
         speed = self.convert_speed_to_meters_per_seconds(speed_px_per_seconds, info_mouse_current_frame)
-        return speed
+        return round(speed, 3)
 
     def calculate_center_of_mouse(self, info_mouse) -> tuple[int, int]:
         center_head = (info_mouse['point_nose'][0] // 2 + info_mouse['point_near'][0] // 2,
