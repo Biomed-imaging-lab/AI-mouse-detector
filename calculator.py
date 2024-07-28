@@ -4,13 +4,13 @@ import numpy as np
 
 
 class Calculator:
-    def __init__(self, info_mouse: dict, info_arena: dict, time_frame: tuple[float, float]):
+    def __init__(self, info_mouse: dict, info_arena: dict, time_frame: tuple[str, str]):
         self.info_mouse = info_mouse
         self.info_arena = info_arena
         self.time_frame = time_frame
 
     def calculate(self):
-        row_data = [self.time_frame]
+        row_data = [f'{self.time_frame[0]}:{self.time_frame[1]}']
         xy = self.calculate_xy_mouse()
         row_data.append(xy)
 
@@ -19,7 +19,7 @@ class Calculator:
             row_data.append(zone)
 
         angle = self.calculate_angle_head_body()
-        row_data.append(angle)
+        row_data.append(round(angle))
 
         return row_data
 

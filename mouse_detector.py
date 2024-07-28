@@ -11,6 +11,7 @@ from calculator import Calculator
 
 class MouseDetector:
     def __init__(self, path_to_video: str, path_to_weight_yolo: str, do_output_video: bool = False):
+        self.path_to_video = path_to_video
         self.input_video = cv2.VideoCapture(path_to_video)
         if not self.input_video.isOpened():
             self.input_video.release()
@@ -38,8 +39,6 @@ class MouseDetector:
             'middle_zone': frame_analyzer.middle_zone,
             'outer_zone': frame_analyzer.outer_zone
         }
-        # frame_analyzer.draw_zones(frame_analyzer.image)
-        # frame_analyzer.show()
         return info_arena
 
     def search_mouse(self, image: np.ndarray) -> dict:
@@ -62,7 +61,7 @@ class MouseDetector:
 
     def detect(self):
         if self.do_output_video:
-            output_video = cv2.VideoWriter('output_video.mp4',
+            output_video = cv2.VideoWriter(f'processed_{self.path_to_video}.mp4',
                                            cv2.VideoWriter_fourcc(*'mp4v'),
                                            self.input_video.get(cv2.CAP_PROP_FPS),
                                            (int(self.input_video.get(cv2.CAP_PROP_FRAME_WIDTH)),
@@ -98,14 +97,16 @@ class MouseDetector:
     def get_time_frame(self, frame_number: int, fps: float):
         current_time_seconds = frame_number / fps
         minutes, seconds = divmod(current_time_seconds, 60)
-        return minutes, seconds
+        minutes_str = f'{int(minutes):02d}'
+        seconds_str = f'{seconds:05.2f}'.replace('.', ',')
+        return minutes_str, seconds_str
 
     def get_name_output_csv(self, path_to_video: str):
         output_filename = os.path.basename(path_to_video)
         name = output_filename.split('.')[0]
         return name
 
-    def calculate(self, info_mouse: dict, info_arena: dict, time_frame: tuple[float, float]) -> List:
+    def calculate(self, info_mouse: dict, info_arena: dict, time_frame: tuple[str, str]) -> List:
         calculator = Calculator(info_mouse, info_arena, time_frame)
         return calculator.calculate()
 
