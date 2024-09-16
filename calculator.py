@@ -2,6 +2,7 @@ import math
 
 import numpy as np
 
+EPS_FOR_LENGTH_VECTORS = 0.1
 
 class Calculator:
     def __init__(self, info_mouse: dict, info_arena: dict, time_frame: tuple[str, str]):
@@ -74,7 +75,15 @@ class Calculator:
         length_vector_body = np.linalg.norm(vector_body)
         length_vector_head = np.linalg.norm(vector_head)
 
-        cos_angle = np.dot(vector_body, vector_head) / (length_vector_head * length_vector_body)
+        print("Длины векторов (тело, голова): ", length_vector_body, length_vector_head)
+
+        if length_vector_body < EPS_FOR_LENGTH_VECTORS or length_vector_head < EPS_FOR_LENGTH_VECTORS:
+            cos_angle = -1
+        else:
+            cos_angle = np.dot(vector_body, vector_head) / (length_vector_head * length_vector_body)
+
+        print('Угол: ', cos_angle)
+
         return np.arccos(cos_angle) * (180 / math.pi)
 
 
