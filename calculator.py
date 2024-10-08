@@ -2,6 +2,7 @@ import math
 
 import numpy as np
 
+EPS_FOR_LENGTH_VECTORS = 0.1
 
 class Calculator:
     def __init__(self, info_mouse: dict, info_arena: dict, time_frame: tuple[str, str]):
@@ -68,14 +69,30 @@ class Calculator:
         vector_body = (self.info_mouse['point_near'][0] - self.info_mouse['point_tail'][0],
                        self.info_mouse['point_near'][1] - self.info_mouse['point_tail'][1])
 
-        vector_head = (self.info_mouse['point_near'][0] - self.info_mouse['point_nose'][0],
-                       self.info_mouse['point_near'][1] - self.info_mouse['point_nose'][1])
+        # vector_head = (self.info_mouse['point_near'][0] - self.info_mouse['point_nose'][0],
+        #                self.info_mouse['point_near'][1] - self.info_mouse['point_nose'][1])
+        vector_head = (self.info_mouse['point_nose'][0] - self.info_mouse['point_near'][0],
+                       self.info_mouse['point_nose'][1] - self.info_mouse['point_near'][1])
 
         length_vector_body = np.linalg.norm(vector_body)
         length_vector_head = np.linalg.norm(vector_head)
 
-        cos_angle = np.dot(vector_body, vector_head) / (length_vector_head * length_vector_body)
-        return np.arccos(cos_angle) * (180 / math.pi)
+        print("Длины векторов (тело, голова): ", length_vector_body, length_vector_head)
+
+        if length_vector_body < EPS_FOR_LENGTH_VECTORS or length_vector_head < EPS_FOR_LENGTH_VECTORS:
+            angle = 0
+        else:
+            dot = np.dot(vector_body, vector_head)
+            det = - vector_body[0] * vector_head[1] + vector_body[1] * vector_head[0]
+            angle = np.arctan2(det, dot)
+            angle = np.degrees(angle)
+
+            if angle < 0:
+                angle += 360
+
+        print('Угол: ', angle)
+
+        return angle
 
 
 
