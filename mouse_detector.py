@@ -27,17 +27,17 @@ class MouseDetector:
         self.output_name_csv = self.get_name_output_csv(path_to_video)
         self.model = YOLO(path_to_weight_yolo)
         self.calculator_speed = CalculatorSpeed()
-        self.behavior_analyzer = self.init_behavior_analyzer(path_to_behavior_weight_yolo)
+        self.behavior_analyzer = self.init_behavior_analyzer(path_to_behavior_weight_yolo, path_to_video)
 
         with open(f'{self.output_name_csv}.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Time, m:s', '(X, Y), (px, px)', 'Central zone',
                              'Internal zone', 'Middle zone', 'Outer zone', 'Angle btw head&body, degrees', 'Speed, m/s'])
 
-    def init_behavior_analyzer(self, path_to_behavior_weight_yolo):
+    def init_behavior_analyzer(self, path_to_behavior_weight_yolo, path_to_video):
         _, frame = self.input_video.read()
-        height, weight = frame.shape
-        return BehaviorAnalyzer(height, weight, path_to_behavior_weight_yolo)
+        height, weight, _ = frame.shape
+        return BehaviorAnalyzer(height, weight, path_to_behavior_weight_yolo, path_to_video)
 
     def detect(self):
         info_arena = self.search_center_and_zones()
@@ -80,8 +80,8 @@ class MouseDetector:
 
     def analyze_behavior_of_mouse(self, frame_number, frame):
         self.behavior_analyzer.set_index_frame(frame_number)
-        self.behavior_analyzer.buffer_img.append(frame)
-        if len(self.behavior_analyzer.buffer_img) >= COUNT_FRAMES_IN_COMPOSITE_IMG:
+        self.behavior_analyzer.update_buffer(frame)
+        if self.behavior_analyzer.buffer_is_full():
             self.behavior_analyzer.analyze()
 
     def search_center_and_zones(self) -> dict:
@@ -155,11 +155,11 @@ class MouseDetector:
 
     def get_name_output_csv(self, path_to_video: str):
         output_filename = os.path.basename(path_to_video)
-        name = output_filename.split('.')[0]
+        name = output_filename.split('.')[0] + '_static'
         return name
 
     def export_to_csv(self, row_data: list):
-        with open(f'{self.output_name_csv}_static.csv', 'a', newline='') as file:
+        with open(f'{self.output_name_csv}.csv', 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(row_data)
 
