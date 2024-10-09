@@ -6,12 +6,15 @@ import csv
 from typing import List
 from ultralytics import YOLO
 from analytic_image_processor import AnalyticImageProcessor
+from behavior_analyzer import BehaviorAnalyzer, COUNT_FRAMES_IN_COMPOSITE_IMG
 from calculator import Calculator
 from calculator_speed import CalculatorSpeed
 
 
 class MouseDetector:
-    def __init__(self, path_to_video: str, path_to_weight_yolo: str, do_output_video: bool = False):
+    def __init__(self, path_to_video: str, path_to_weight_yolo: str,
+                 path_to_behavior_weight_yolo: str, do_output_video: bool = False):
+
         self.path_to_video = path_to_video
         self.input_video = cv2.VideoCapture(path_to_video)
         self.do_output_video = do_output_video
@@ -24,11 +27,17 @@ class MouseDetector:
         self.output_name_csv = self.get_name_output_csv(path_to_video)
         self.model = YOLO(path_to_weight_yolo)
         self.calculator_speed = CalculatorSpeed()
+        self.behavior_analyzer = self.init_behavior_analyzer(path_to_behavior_weight_yolo)
 
         with open(f'{self.output_name_csv}.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Time, m:s', '(X, Y), (px, px)', 'Central zone',
                              'Internal zone', 'Middle zone', 'Outer zone', 'Angle btw head&body, degrees', 'Speed, m/s'])
+
+    def init_behavior_analyzer(self, path_to_behavior_weight_yolo):
+        _, frame = self.input_video.read()
+        height, weight = frame.shape
+        return BehaviorAnalyzer(height, weight, path_to_behavior_weight_yolo)
 
     def detect(self):
         info_arena = self.search_center_and_zones()
@@ -47,13 +56,11 @@ class MouseDetector:
             info_mouse = self.search_mouse(frame)
 
             if self.is_mouse_found(info_mouse):
-                time_frame = self.get_time_frame(frame_number, fps)
-                static_data = self.calculate_static_parameters_of_mouse(info_mouse, info_arena, time_frame)
+                self.analyze_behavior_of_mouse(frame_number, frame)
 
-                speed = self.calculate_speed(info_mouse, frame_number, fps)
-                static_data.append(speed)
+                data = self.calculate_data(frame_number, fps, info_mouse, info_arena)
+                self.export_to_csv(data)
 
-                self.export_to_csv(static_data)
 
             frame_number += 1
 
@@ -62,6 +69,20 @@ class MouseDetector:
                 self.output_video.write(frame_with_all)
 
         self.release_video()
+
+    def calculate_data(self, frame_number, fps, info_mouse, info_arena):
+        time_frame = self.get_time_frame(frame_number, fps)
+        static_data = self.calculate_static_parameters_of_mouse(info_mouse, info_arena, time_frame)
+
+        speed = self.calculate_speed(info_mouse, frame_number, fps)
+        static_data.append(speed)
+        return static_data
+
+    def analyze_behavior_of_mouse(self, frame_number, frame):
+        self.behavior_analyzer.set_index_frame(frame_number)
+        self.behavior_analyzer.buffer_img.append(frame)
+        if len(self.behavior_analyzer.buffer_img) >= COUNT_FRAMES_IN_COMPOSITE_IMG:
+            self.behavior_analyzer.analyze()
 
     def search_center_and_zones(self) -> dict:
         _, frame = self.input_video.read()
@@ -126,6 +147,7 @@ class MouseDetector:
         calculator = Calculator(info_mouse, info_arena, time_frame)
         return calculator.calculate()
 
+
     def calculate_speed(self, info_mouse, frame_number, fps):
         current_time_seconds = frame_number / fps
         speed = self.calculator_speed.update(info_mouse, current_time_seconds)
@@ -137,7 +159,7 @@ class MouseDetector:
         return name
 
     def export_to_csv(self, row_data: list):
-        with open(f'{self.output_name_csv}.csv', 'a', newline='') as file:
+        with open(f'{self.output_name_csv}_static.csv', 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(row_data)
 
