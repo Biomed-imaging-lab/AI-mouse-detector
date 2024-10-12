@@ -9,6 +9,7 @@ from analytic_image_processor import AnalyticImageProcessor
 from behavior_analyzer import BehaviorAnalyzer, COUNT_FRAMES_IN_COMPOSITE_IMG
 from calculator import Calculator
 from calculator_speed import CalculatorSpeed
+from csv_combiner import CSVCombiner
 
 
 class MouseDetector:
@@ -31,7 +32,7 @@ class MouseDetector:
 
         with open(f'{self.output_name_csv}.csv', 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['Time, m:s', '(X, Y), (px, px)', 'Central zone',
+            writer.writerow(['Time, m:s', 'X, px', 'Y, px', 'Central zone',
                              'Internal zone', 'Middle zone', 'Outer zone', 'Angle btw head&body, degrees', 'Speed, m/s'])
 
     def init_behavior_analyzer(self, path_to_behavior_weight_yolo, path_to_video):
@@ -55,6 +56,8 @@ class MouseDetector:
 
             info_mouse = self.search_mouse(frame)
 
+            frame_number += 1
+
             if self.is_mouse_found(info_mouse):
                 self.analyze_behavior_of_mouse(frame_number, frame)
 
@@ -62,13 +65,12 @@ class MouseDetector:
                 self.export_to_csv(data)
 
 
-            frame_number += 1
-
             if self.do_output_video:
                 frame_with_all = self.draw(frame, info_mouse, info_arena)
                 self.output_video.write(frame_with_all)
 
         self.release_video()
+        self.combine_csv_files()
 
     def calculate_data(self, frame_number, fps, info_mouse, info_arena):
         time_frame = self.get_time_frame(frame_number, fps)
@@ -79,7 +81,7 @@ class MouseDetector:
         return static_data
 
     def analyze_behavior_of_mouse(self, frame_number, frame):
-        self.behavior_analyzer.set_index_frame(frame_number)
+        #self.behavior_analyzer.set_shift(frame_number)
         self.behavior_analyzer.update_buffer(frame)
         if self.behavior_analyzer.buffer_is_full():
             self.behavior_analyzer.analyze()
@@ -157,6 +159,13 @@ class MouseDetector:
         output_filename = os.path.basename(path_to_video)
         name = output_filename.split('.')[0] + '_static'
         return name
+
+    def combine_csv_files(self):
+        csv_combiner = CSVCombiner(self.output_name_csv, self.behavior_analyzer.output_name_csv,
+                                   self.behavior_analyzer.shift)
+
+        csv_combiner.combine()
+
 
     def export_to_csv(self, row_data: list):
         with open(f'{self.output_name_csv}.csv', 'a', newline='') as file:
