@@ -2,6 +2,7 @@ import numpy as np
 import pandas
 import os
 import csv
+import cv2
 
 from ultralytics import YOLO
 
@@ -32,28 +33,24 @@ class BehaviorAnalyzer:
 
 
     def create_composite_frame(self):
-        composite_img = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-
         index_current_img = COUNT_FRAMES_IN_COMPOSITE_IMG // 2
+        current_frame = self.buffer_img[index_current_img]
+        prev_frames = self.buffer_img[:index_current_img]
+        next_frames = self.buffer_img[(index_current_img + 1):]
 
-        green_component = 0
-        for i in range(index_current_img):
-            green_component += self.buffer_img[i][:, :, 1]
-        green_component = green_component // index_current_img  # mean
+        current_red = current_frame[:, :, 2]
 
-        red_component = self.buffer_img[index_current_img][:, :, 2]
+        avg_green = np.mean([frame[:, :, 1] for frame in prev_frames], axis=0)
 
-        blue_component = 0
-        for i in range(index_current_img + 1, len(self.buffer_img)):
-            blue_component += self.buffer_img[i][:, :, 0]
+        avg_blue = np.mean([frame[:, :, 0] for frame in next_frames], axis=0)
 
-        composite_img[:, :, 1] = green_component
-        composite_img[:, :, 2] = red_component
-        composite_img[:, :, 0] = blue_component
+        composite_img = np.stack((avg_blue, avg_green, current_red), axis=2).astype(np.uint8)
 
         return composite_img
 
     def update_buffer(self, frame):
+        cv2.imwrite('frame_for_buffer.jpg', frame)
+
         if self.buffer_is_full():
             self.buffer_img.pop(0)
             self.buffer_img.append(frame)
@@ -68,14 +65,10 @@ class BehaviorAnalyzer:
         results = self.model(composite_img)
         for result in results:
             probs = result.probs
-            print(probs.data)
-            print(probs.top5conf)
-            print(self.model.names)
             probs_behavior_mouse = []
             for key in self.model.names.keys():
                 probs_behavior_mouse.append(round(float(probs.data[key]), 3))
 
-        #self.info_behavior_of_mouse = info_behavior_mouse
         self.export_to_csv(probs_behavior_mouse)
 
     def get_name_output_csv(self, path_to_video):
