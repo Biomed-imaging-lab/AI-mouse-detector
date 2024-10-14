@@ -59,16 +59,17 @@ class MouseDetector:
             frame_number += 1
 
             if self.is_mouse_found(info_mouse):
-                self.analyze_behavior_of_mouse(frame_number, frame)
+                self.analyze_behavior_of_mouse(frame)
 
                 data = self.calculate_data(frame_number, fps, info_mouse, info_arena)
                 self.export_to_csv(data)
 
 
             if self.do_output_video:
-                frame_with_all = self.draw(frame, info_mouse, info_arena)
+                frame_with_all = self.draw(frame.copy(), info_mouse, info_arena)
                 self.output_video.write(frame_with_all)
 
+        self.behavior_analyzer.output_video_beh.release()
         self.release_video()
         self.combine_csv_files()
 
@@ -80,8 +81,7 @@ class MouseDetector:
         static_data.append(speed)
         return static_data
 
-    def analyze_behavior_of_mouse(self, frame_number, frame):
-        #self.behavior_analyzer.set_shift(frame_number)
+    def analyze_behavior_of_mouse(self, frame):
         self.behavior_analyzer.update_buffer(frame)
         if self.behavior_analyzer.buffer_is_full():
             self.behavior_analyzer.analyze()
