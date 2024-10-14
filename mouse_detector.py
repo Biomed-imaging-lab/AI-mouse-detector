@@ -6,7 +6,7 @@ import csv
 from typing import List
 from ultralytics import YOLO
 from analytic_image_processor import AnalyticImageProcessor
-from behavior_analyzer import BehaviorAnalyzer, COUNT_FRAMES_IN_COMPOSITE_IMG
+from behavior_analyzer import BehaviorAnalyzer
 from calculator import Calculator
 from calculator_speed import CalculatorSpeed
 from csv_combiner import CSVCombiner
@@ -69,7 +69,6 @@ class MouseDetector:
                 frame_with_all = self.draw(frame.copy(), info_mouse, info_arena)
                 self.output_video.write(frame_with_all)
 
-        self.behavior_analyzer.output_video_beh.release()
         self.release_video()
         self.combine_csv_files()
 
