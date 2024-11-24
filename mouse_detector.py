@@ -76,7 +76,7 @@ class MouseDetector:
         time_frame = self.get_time_frame(frame_number, fps)
         static_data = self.calculate_static_parameters_of_mouse(info_mouse, info_arena, time_frame)
 
-        speed = self.calculate_speed(info_mouse, frame_number, fps)
+        speed = self.calculate_speed(info_mouse, info_arena['radius_arena'], frame_number, fps)
         static_data.append(speed)
         return static_data
 
@@ -149,9 +149,9 @@ class MouseDetector:
         return calculator.calculate()
 
 
-    def calculate_speed(self, info_mouse, frame_number, fps):
+    def calculate_speed(self, info_mouse, radius_arena, frame_number, fps):
         current_time_seconds = frame_number / fps
-        speed = self.calculator_speed.update(info_mouse, current_time_seconds)
+        speed = self.calculator_speed.update(info_mouse, radius_arena, current_time_seconds)
         return speed
 
     def get_name_output_csv(self, path_to_video: str):
