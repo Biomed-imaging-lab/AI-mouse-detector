@@ -49,7 +49,6 @@ class BehaviorAnalyzer:
         return composite_img
 
     def update_buffer(self, frame):
-        cv2.imwrite('frame_for_buffer.jpg', frame)
 
         if self.buffer_is_full():
             self.buffer_img.pop(0)
