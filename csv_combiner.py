@@ -3,6 +3,12 @@ import numpy as np
 from pykalman import KalmanFilter
 
 BLOCK_SIZE = 25
+OBSERVATION_MATRIX = np.array([
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.5, 0.0, 0.5],
+])
+
 
 class CSVCombiner:
     def __init__(self, path_to_static_data, path_to_behavior_data, shift):
@@ -21,7 +27,7 @@ class CSVCombiner:
         df_beh_shifted.index = range(len(df_beh_shifted))
 
         result = pd.concat([df_static, df_beh_shifted], axis=1)
-        excel_file = f'{self.path_to_behavior_data[:len(self.path_to_behavior_data) - 4]}_data.xlsx'
+        excel_file = f'mouse_data\\{self.path_to_behavior_data[:len(self.path_to_behavior_data) - 4]}_data.xlsx'
         result.to_excel(excel_file, index=False)
 
     def calman(self, df_beh):
@@ -29,16 +35,11 @@ class CSVCombiner:
         initial_state = df_beh.iloc[0].values
 
         transition_matrix = np.eye(num_features)
-        observation_matrix = np.array([
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.5, 0.0, 0.5],
-        ])
         Q = np.eye(num_features) * 0.01
         R = np.eye(num_features) * 0.1
 
         kf = KalmanFilter(transition_matrices=transition_matrix,
-                          observation_matrices=observation_matrix,
+                          observation_matrices=OBSERVATION_MATRIX,
                           initial_state_mean=initial_state,
                           transition_covariance=Q,
                           observation_covariance=R)
