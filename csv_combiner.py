@@ -25,17 +25,18 @@ class CSVCombiner:
         result.to_excel(excel_file, index=False)
 
     def calman(self, df_beh):
+        num_features = df_beh.shape[1]
         initial_state = df_beh.iloc[0].values
 
-        transition_matrix = np.eye(4)
+        transition_matrix = np.eye(num_features)
         observation_matrix = np.array([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.5, 0.0, 0.5, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.5, 0.0, 0.5],
         ])
-        Q = np.eye(4) * 0.01
-        R = np.eye(4) * 0.1
+        Q = np.eye(num_features) * 0.01
+        R = np.eye(num_features) * 0.1
+
         kf = KalmanFilter(transition_matrices=transition_matrix,
                           observation_matrices=observation_matrix,
                           initial_state_mean=initial_state,
