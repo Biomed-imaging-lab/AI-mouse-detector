@@ -9,6 +9,11 @@ from scipy.signal import savgol_filter
 
 from calculator_speed import RADUIS_ARENA_IN_METERS
 
+ZONES_ARENA = ["Central zone", "Internal zone", "Middle zone", "Outer zone"]
+BEHAVIORS = ['groom', 'run', 'sit']
+BEHAVIORS_PALETTE = {'groom': 'blue', 'run': 'green', 'sit': 'red'}
+STEP_TIME_FOR_ETHOGRAM = 30
+
 class Plotter:
     def __init__(self, path_to_beh, radius_arena):
         self.video_name = f'{path_to_beh[:len(path_to_beh) - 4]}'
@@ -21,7 +26,13 @@ class Plotter:
 
 
     def plot(self):
-        pass
+        self.plot_trajectory()
+        self.plot_speed()
+        self.plot_position_heatmap()
+        self.plot_velocity_heatmap()
+        self.plot_hist_zones()
+        self.plot_behs_on_trajectory()
+        self.plot_ethogram()
 
     def plot_trajectory(self):
         start_x, start_y = self.df['X, px'].iloc[0], self.df['Y, px'].iloc[0]
@@ -160,3 +171,79 @@ class Plotter:
         plt.ylabel("Y (px)")
         filename = os.path.join(self.path_to_plots, f'position_average_speed_{self.video_name}.png')
         plt.savefig(filename)
+
+    def plot_hist_zones(self):
+        def time_to_seconds(time_str):
+            minutes, rest = time_str.split(':')
+            seconds, milliseconds = rest.split(',')
+            return int(minutes) * 60 + int(seconds) + int(milliseconds) / 100
+
+        self.df["Time (s)"] = self.df["Time, m:s"].apply(time_to_seconds)
+
+        self.df["Time Difference (s)"] = self.df["Time (s)"].diff().fillna(0)
+
+        zone_times = (self.df[ZONES_ARENA].multiply(self.df["Time Difference (s)"], axis=0)).sum()
+
+        plt.figure(figsize=(12, 5))
+
+        plt.subplot(1, 2, 1)
+        zone_times.plot(kind='bar', color='skyblue', edgecolor='black')
+        plt.title("Time spent in the arena zones (s)")
+        plt.xlabel("Zones")
+        plt.ylabel("Time (s)")
+        plt.xticks(rotation=360)
+
+        plt.subplot(1, 2, 2)
+        zone_times_percentage = (zone_times / zone_times.sum()) * 100
+        zone_times_percentage.plot(kind='bar', color='lightgreen', edgecolor='black')
+        plt.title("Time spent in the arena areas (%)")
+        plt.xlabel("Zones")
+        plt.ylabel("Percentage of time (%)")
+        plt.xticks(rotation=360)
+        filename = os.path.join(self.path_to_plots, f'histogram_for_zones_{self.video_name}.png')
+        plt.savefig(filename)
+
+    def plot_behs_on_trajectory(self):
+        filtered_df = self.df[self.df[BEHAVIORS].sum(axis=1) > 0]
+        plt.figure(figsize=(6, 6))
+
+        circle = plt.Circle((0, 0), self.radius_arena, color='gray', fill=False, linestyle='--', linewidth=2)
+        plt.gca().add_artist(circle)
+
+        sns.scatterplot(x='X, px', y='Y, px', hue=filtered_df[BEHAVIORS].idxmax(axis=1), data=filtered_df, s=25, palette=BEHAVIORS_PALETTE)
+        plt.scatter(0, 0, color='black', edgecolor='black', s=75, zorder=5, label="center")
+
+        plt.xlim(-self.radius_arena, self.radius_arena)
+        plt.ylim(-self.radius_arena, self.radius_arena)
+        plt.gca().set_aspect('equal', adjustable='box')  
+        xticks_px = plt.gca().get_xticks()
+        yticks_px = plt.gca().get_yticks()
+
+        xticks_m = xticks_px * self.meters_in_px 
+        yticks_m = yticks_px * self.meters_in_px
+
+        plt.xticks(xticks_px, labels=[f"{tick:.2f}" for tick in xticks_m])  
+        plt.yticks(yticks_px, labels=[f"{tick:.2f}" for tick in yticks_m])
+
+
+        plt.title("Inter-group Movement Distribution")
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        plt.xlabel("X, m")
+        plt.ylabel("Y, m")
+        filename = os.path.join(self.path_to_plots, f'behaviors_on_trajectory_{self.video_name}.png')
+        plt.savefig(filename)
+
+    def plot_ethogram(self):
+        trimmed_df = self.df[BEHAVIORS].iloc[10:-10]
+
+        time_labels = self.df["Time, m:s"].iloc[10:-10:STEP_TIME_FOR_ETHOGRAM]
+        time_indices = range(0, len(trimmed_df), STEP_TIME_FOR_ETHOGRAM)
+
+        plt.figure(figsize=(10, 5))
+        sns.heatmap(trimmed_df.astype(int).T, cbar=False, cmap="viridis")
+        plt.title("Ethogram")
+        plt.xlabel("Time")
+        plt.xticks(ticks=time_indices, labels=time_labels, rotation=60)
+        filename = os.path.join(self.path_to_plots, f'ethogram_{self.video_name}.png')
+        plt.savefig(filename)
+
