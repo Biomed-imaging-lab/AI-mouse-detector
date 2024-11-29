@@ -10,16 +10,19 @@ from behavior_analyzer import BehaviorAnalyzer
 from calculator import Calculator
 from calculator_speed import CalculatorSpeed
 from csv_combiner import CSVCombiner
+from plotter import Plotter
 
 
 class MouseDetector:
     def __init__(self, path_to_video: str, path_to_weight_yolo: str,
-                 path_to_behavior_weight_yolo: str, do_output_video: bool = False):
+                 path_to_behavior_weight_yolo: str, do_output_video: bool = False, do_plot_graphs: bool = True):
 
         self.path_to_video = path_to_video
         self.input_video = cv2.VideoCapture(path_to_video)
         self.do_output_video = do_output_video
+        self.do_plot_graphs = do_plot_graphs
         self.output_video = self.create_output_video()
+        self.radius_arena = None
 
         if not self.input_video.isOpened():
             self.input_video.release()
@@ -44,6 +47,9 @@ class MouseDetector:
         info_arena = self.search_center_and_zones()
 
         self.processing_video(info_arena)
+
+        if self.do_plot_graphs:
+            self.plot_graphs()
 
     def processing_video(self, info_arena):
         frame_number = 0
@@ -98,6 +104,9 @@ class MouseDetector:
             'middle_zone': frame_analyzer.middle_zone,
             'outer_zone': frame_analyzer.outer_zone
         }
+
+        self.radius_arena = info_arena['radius_arena']
+
         return info_arena
 
     def search_mouse(self, image: np.ndarray) -> dict:
@@ -165,6 +174,9 @@ class MouseDetector:
 
         csv_combiner.combine()
 
+    def plot_graphs(self):
+        plotter = Plotter(self.behavior_analyzer.output_name_csv, self.radius_arena)
+        plotter.plot()
 
     def export_to_csv(self, row_data: list):
         with open(f'{self.output_name_csv}.csv', 'a', newline='') as file:
