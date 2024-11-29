@@ -29,8 +29,8 @@ class CSVCombiner:
         df_beh_shifted.index = range(len(df_beh_shifted))
 
         result = pd.concat([df_static, df_beh_shifted], axis=1)
-        if not os.path.exists(f'mouse_data{self.path_to_behavior_data[:len(self.path_to_behavior_data) - 4]}'):
-            os.mkdir(f'mouse_data{self.path_to_behavior_data[:len(self.path_to_behavior_data) - 4]}', exist_ok=True)
+
+        os.makedirs('mouse_data', exist_ok=True)
         excel_file = f'mouse_data\\{self.path_to_behavior_data[:len(self.path_to_behavior_data) - 4]}_data.xlsx'
         result.to_excel(excel_file, index=False)
 
