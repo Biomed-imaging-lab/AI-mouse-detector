@@ -67,7 +67,7 @@ class Plotter:
         plt.ylabel("Y (m)")
         plt.legend()
         filename = os.path.join(self.path_to_plots, f'trajectory_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
     def plot_speed(self):
         tick_positions = range(0, len(self.df), 30)
@@ -87,7 +87,7 @@ class Plotter:
         plt.ylabel("Speed, m/s")
         plt.legend()
         filename = os.path.join(self.path_to_plots, f'speed_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
     def plot_position_heatmap(self):
         x = self.df['X, px']
@@ -127,7 +127,7 @@ class Plotter:
         plt.ylabel("Y (px)")
 
         filename = os.path.join(self.path_to_plots, f'position_heatmap_log_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
 
     def plot_velocity_heatmap(self):
@@ -170,7 +170,7 @@ class Plotter:
         plt.xlabel("X (px)")
         plt.ylabel("Y (px)")
         filename = os.path.join(self.path_to_plots, f'position_average_speed_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
     def plot_hist_zones(self):
         def time_to_seconds(time_str):
@@ -201,7 +201,7 @@ class Plotter:
         plt.ylabel("Percentage of time (%)")
         plt.xticks(rotation=360)
         filename = os.path.join(self.path_to_plots, f'histogram_for_zones_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
     def plot_behs_on_trajectory(self):
         filtered_df = self.df[self.df[BEHAVIORS].sum(axis=1) > 0]
@@ -231,7 +231,7 @@ class Plotter:
         plt.xlabel("X, m")
         plt.ylabel("Y, m")
         filename = os.path.join(self.path_to_plots, f'behaviors_on_trajectory_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
     def plot_ethogram(self):
         trimmed_df = self.df[BEHAVIORS].iloc[10:-10]
@@ -245,5 +245,5 @@ class Plotter:
         plt.xlabel("Time")
         plt.xticks(ticks=time_indices, labels=time_labels, rotation=60)
         filename = os.path.join(self.path_to_plots, f'ethogram_{self.video_name}.png')
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
 
