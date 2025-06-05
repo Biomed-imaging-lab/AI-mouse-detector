@@ -67,10 +67,14 @@ class Plotter:
         plt.ylabel("Y (m)")
         plt.legend()
         filename = os.path.join(self.path_to_plots, f'trajectory_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
+
 
     def plot_speed(self):
-        tick_positions = range(0, len(self.df), 30)
+        max_ticks = 20  # Максимальное число меток на оси X
+        tick_step = max(1, len(self.df) // max_ticks)  # Шаг между метками
+
+        tick_positions = np.arange(0, len(self.df), tick_step)
         tick_labels = self.df["Time, m:s"].iloc[tick_positions]
 
         window_length = 91
@@ -81,13 +85,13 @@ class Plotter:
         plt.figure(figsize=(10, 5))
         plt.plot(self.df['Time, m:s'], self.df['Speed, m/s'], color='green', alpha=0.3, label="Original Speed")
         plt.plot(self.df['Time, m:s'], self.df['Smoothed Speed (Savitzky-Golay)'], color='red', label="Smoothed Speed (Savitzky-Golay)")
-        plt.xticks(ticks=tick_positions, labels=tick_labels, rotation=45)
+        plt.xticks(ticks=tick_positions, labels=tick_labels, rotation=45, ha='right')  # Повернем для лучшей читаемости
         plt.title("Speed over Time (Smoothed with Savitzky-Golay)")
         plt.xlabel("Time, m:s")
         plt.ylabel("Speed, m/s")
         plt.legend()
         filename = os.path.join(self.path_to_plots, f'speed_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
 
     def plot_position_heatmap(self):
         x = self.df['X, px']
@@ -127,7 +131,7 @@ class Plotter:
         plt.ylabel("Y (px)")
 
         filename = os.path.join(self.path_to_plots, f'position_heatmap_log_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
 
 
     def plot_velocity_heatmap(self):
@@ -167,10 +171,10 @@ class Plotter:
         plt.yticks(yticks_px, labels=[f"{tick:.2f}" for tick in yticks_m])
         cbar = plt.colorbar(im, label="Average Speed (m/s)")
         plt.title("Mouse Velocity Heatmap (Average Speed)")
-        plt.xlabel("X (px)")
-        plt.ylabel("Y (px)")
+        plt.xlabel("X (m)")
+        plt.ylabel("Y (m)")
         filename = os.path.join(self.path_to_plots, f'position_average_speed_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
 
     def plot_hist_zones(self):
         def time_to_seconds(time_str):
@@ -201,7 +205,7 @@ class Plotter:
         plt.ylabel("Percentage of time (%)")
         plt.xticks(rotation=360)
         filename = os.path.join(self.path_to_plots, f'histogram_for_zones_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
 
     def plot_behs_on_trajectory(self):
         filtered_df = self.df[self.df[BEHAVIORS].sum(axis=1) > 0]
@@ -231,7 +235,7 @@ class Plotter:
         plt.xlabel("X, m")
         plt.ylabel("Y, m")
         filename = os.path.join(self.path_to_plots, f'behaviors_on_trajectory_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
 
     def plot_ethogram(self):
         trimmed_df = self.df[BEHAVIORS].iloc[10:-10]
@@ -245,5 +249,5 @@ class Plotter:
         plt.xlabel("Time")
         plt.xticks(ticks=time_indices, labels=time_labels, rotation=60)
         filename = os.path.join(self.path_to_plots, f'ethogram_{self.video_name}.png')
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
 
