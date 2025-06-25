@@ -135,4 +135,143 @@ streamlit run app.py
 - Убедитесь, что у вас достаточно места на диске для выходных файлов
 - При использовании Docker все данные сохраняются в локальных папках `uploads/` и `mouse_data/`
 - Не останавливайте контейнер во время обработки видео
-- При обновлении страницы в браузере текущие результаты анализа будут потеряны 
+- При обновлении страницы в браузере текущие результаты анализа будут потеряны
+
+# Analysis of the behavior of laboratory mice
+
+This application provides a web interface for analyzing video experiments on laboratory mice. Type of video experiment: open field (<<open field>>). The input data should look like this:
+![Example input data](docs/images/input.png)
+
+## Features
+
+- Mouse detection and tracking using YOLO
+- Analysis and classification of behavior
+- Speed and position tracking
+- Zonal analysis (Central, Inner, Middle and Outer zones)
+- Automatic graph generation
+- Uploading results (Excel/CSV data and debugging video)
+
+## Installation and launch
+
+### Launch via Docker
+
+To launch an application via Docker:
+
+1. Install [Docker](https://docs.docker.com/get-docker /) and [Docker Compose](https://docs.docker.com/compose/install /)
+
+2. Clone the repository:
+``bash
+git clone https://github.com/Biomed-imaging-lab/AI-mouse-detector.git
+cd MouseDetector
+```
+
+3. Assemble and launch the container:
+``bash
+docker-compose up --build
+``
+><span style="color:red">**IMPORTANT**</span>: After executing this command, a docker image weighing ~15GB will be created on the local computer (on which the command is running).. Make sure that there is free disk space.
+
+4. Open a web browser and navigate to:
+``
+http://localhost:8501
+```
+
+5. After completing the work, run the command:
+``bash
+docker-compose down
+```
+><span style="color:red">**IMPORTANT***</span>: This will stop the container from working, but it will not delete the image. If necessary, follow the instructions below to delete the image.
+
+To delete an image:
+- Run the command:
+``bash
+docker images
+``
+- Find an image named `mousedetector-mouse-detector`
+- View its `IMAGE ID` field
+- Execute the command:
+``bash
+docker rmi <IMAGE ID>
+``
+where IMAGE ID is the value specified in the IMAGE ID column for the `mousedetector-mouse-detector` image
+#### Data structure
+
+When using Docker:
+- Uploaded videos are saved in the `uploads/` folder
+- The analysis results are saved in the `mouse_data/` folder
+- These folders are automatically created the first time you start
+
+### Local installation (alternative method)
+
+To perform a local installation, you need Python version 3.11 and higher installed.
+
+1. Clone the repository:
+``bash
+git clone https://github.com/Biomed-imaging-lab/AI-mouse-detector.git
+cd MouseDetector
+```
+2. Create a virtual environment:
+``bash
+python -m venv .venv
+``
+3. Activate the virtual environment depending on the operating system on which the project is deployed (see the table at the link): https://docs.python.org/3/library/venv.html#how-venvs-work 
+
+4. Install the necessary dependencies:
+```bash
+pip install -r requirements.txt
+```
+><span style="color:red">**IMPORTANT**</span>: After executing this command, the necessary libraries and packages with a total weight of ~15 GB will be installed on the local computer (on which the command is running).. Make sure that there is free disk space.
+## Launching the application (for local installation)
+
+1. Launch the Streamlit app:
+```bash
+streamlit run app.py
+```
+
+2. Open a web browser and navigate to the URL specified in the terminal (usually http://localhost:8501 )
+
+## Using the app
+
+1. **File Upload**
+   - Upload a video file (MP4 or AVI format). The type of input data is specified at the beginning of the README.
+
+2. **Analysis Settings**
+- Select whether you want to create a debugging video
+      - The debugging video is the source video that displays the found areas of the arena and the mouse key points. It does not overwrite the old video, but is created with it. It can be useful for visual evaluation of the algorithm (whether there are areas of the arena or the mouse itself).
+   - Select whether you want to create analysis graphs
+      - The analysis graphs represent various dependencies and maps based on the data obtained. The full list of analysis graphs is provided below.
+
+3. **Starting the analysis**
+- Click the "Start" button to start processing
+   - Wait for the analysis to be completed
+      - Depending on the power of the processing machine and the size of the video, the analysis may take a long time. On average, for a 5-minute video, the analysis takes 40-50 minutes.
+   ><span style="color:red">**IMPORTANT**</span>: Do not refresh the page after receiving the results, otherwise the results will not be available for download from the Streamlit interface.e. The results are saved locally to the project directory.
+
+4. **Viewing the results**
+   - Viewing preliminary data
+   - Download complete data in Excel format
+   - View debugging video (if created)
+- View generated graphs (if created)
+   - Download the necessary results
+
+## Output files
+
+The application generates several types of output files:
+
+- Excel file with detailed analysis data
+- Debugging video showing detection and tracking (optional)
+- Various analysis graphs:
+- Trajectory of mouse movement
+- Graph of speed over time
+  - Heat map of position
+- Heat map of velocities
+  - Histograms of zonal analysis
+  - The trajectory of the mouse indicating the class of behavior at each point
+
+## Notes
+
+- Processing of large video files may take some time.
+- Make sure you have enough disk space for the output files.
+- When using Docker, all data is saved in the local folders `uploads/` and `mouse_data/`
+- Do not stop the container while processing the video
+- When updating the page in the browser, the current analysis results will be lost
